@@ -30,6 +30,9 @@ type HealthData struct {
 func Serve() {
 
 	InitState()
+	go func() {
+		InitCron()
+	}()
 
 	r := chi.NewRouter()
 	r.Use(RequestLogger)
