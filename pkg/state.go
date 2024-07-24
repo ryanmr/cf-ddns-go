@@ -8,37 +8,54 @@ import (
 )
 
 type ServerState struct {
-	PreviousIp         *string
-	PreviousUpdateTime *time.Time
-	Mutex              sync.Mutex
+	CurrentIp  *string
+	PreviousIp *string
+	UpdateTime *time.Time
+	Mutex      sync.Mutex
 }
 
 var state ServerState
 
+// Initializes the server state.
+//
+// This must be called before any calls to UpdateState.
 func InitState() {
-	ip := "0.0.0.0"
+	currentIp := "0.0.0.0"
+	previousIp := "0.0.0.0"
 	time := time.Now()
 
-	log.Debug().Str("ip", ip).Time("time", time).Int8("phase", 1).Msg("Initializing state")
+	log.Debug().Msg("Initializing state")
 
 	state.Mutex.Lock()
-	state.PreviousIp = &ip
-	state.PreviousUpdateTime = &time
+	state.CurrentIp = &currentIp
+	state.PreviousIp = &previousIp
+	state.UpdateTime = &time
 	state.Mutex.Unlock()
 
-	log.Debug().Str("ip", ip).Time("time", time).Int8("phase", 2).Msg("Initialized state")
+	log.Debug().Msg("Initialized state")
 
 }
 
-func UpdateState(ip string, time time.Time) {
+// Updates the server state.
+func UpdateState(ip string) {
+	time := time.Now()
 
-	log.Debug().Str("ip", ip).Time("time", time).Int8("phase", 1).Msg("Updating state")
+	log.Debug().
+		Str("ip", ip).
+		Time("time", time).
+		Int8("phase", 1).
+		Msg("Updating state")
 
 	state.Mutex.Lock()
-	*state.PreviousIp = ip
-	*state.PreviousUpdateTime = time
+	*state.PreviousIp = *state.CurrentIp
+	*state.UpdateTime = time
+	*state.CurrentIp = ip
 	state.Mutex.Unlock()
 
-	log.Debug().Str("ip", ip).Time("time", time).Int8("phase", 2).Msg("Updated state")
+	log.Debug().
+		Str("ip", ip).
+		Time("time", time).
+		Int8("phase", 2).
+		Msg("Updated state")
 
 }

@@ -49,12 +49,13 @@ func Serve() {
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 
 		state.Mutex.Lock()
+		currentIp := *state.CurrentIp
 		previousIp := *state.PreviousIp
-		previousUpdateTime := *state.PreviousUpdateTime
+		previousUpdateTime := *state.UpdateTime
 		data := IndexData{
 			Now:                time.Now().UnixMilli(),
-			CurrentIp:          "1",
 			CurrentTime:        time.Now().String(),
+			CurrentIp:          currentIp,
 			PreviousIp:         previousIp,
 			PreviousUpdateTime: previousUpdateTime.String(),
 		}
@@ -65,7 +66,8 @@ func Serve() {
 
 	r.Post("/force-update", func(w http.ResponseWriter, r *http.Request) {
 
-		UpdateState(fmt.Sprintf("%d", requestID), time.Now())
+		// this is pretend
+		UpdateState(fmt.Sprintf("%d", requestID))
 
 		http.Redirect(w, r, "/", http.StatusSeeOther)
 	})
