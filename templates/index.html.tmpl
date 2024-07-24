@@ -1,0 +1,17 @@
+<html lang="en">
+  <head>
+      <title>cf ddns</title>
+      <meta http-equiv="refresh" content="5; url=/?t={{ .Now }}" />
+      <link rel="stylesheet" type="text/css" href="./static/styles.css" />
+  </head>
+  <body>
+  <h1>{{ .CurrentIp }}</h1>
+  <p>current time: {{ .CurrentTime }}</p>
+  <p>previous ip: {{ .PreviousIp }}</p>
+  <p>previous update: {{ .PreviousUpdateTime }}</p>
+  <hr />
+  <form method="post" action="/force-update">
+    <button type="submit">force update</button>
+  </form>
+  </body>
+</html>
