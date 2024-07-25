@@ -1,15 +1,39 @@
 package pkg
 
 import (
+	"os"
+	"strconv"
 	"time"
 
 	"github.com/go-co-op/gocron/v2"
 	"github.com/rs/zerolog/log"
 )
 
-var logger = log.With().Str("module", "cronjob").Logger()
-
 func InitCron() {
+
+	logger := log.With().Str("module", "cronjob").Logger()
+
+	frequency := 30
+	jitterEnv, ok := os.LookupEnv("CRON_FREQUENCY")
+	if ok {
+		s, err := strconv.Atoi(jitterEnv)
+		if err != nil {
+			logger.Warn().Msg("Could not evaluate CRON_FREQUENCY, defaulting")
+		} else {
+			frequency = s
+		}
+	}
+
+	jitter := 15
+	jitterEnv, ok = os.LookupEnv("CRON_FREQUENCY_JITTER")
+	if ok {
+		s, err := strconv.Atoi(jitterEnv)
+		if err != nil {
+			logger.Warn().Msg("Could not evaluate CRON_FREQUENCY_JITTER, defaulting")
+		} else {
+			frequency = s
+		}
+	}
 
 	s, err := gocron.NewScheduler()
 	defer func() { _ = s.Shutdown() }()
@@ -32,8 +56,8 @@ func InitCron() {
 
 	job, err = s.NewJob(
 		gocron.DurationRandomJob(
-			time.Second,
-			5*time.Second,
+			(time.Duration(frequency-jitter)*time.Minute),
+			time.Duration(frequency+jitter)*time.Minute,
 		),
 		gocron.NewTask(
 			task,
@@ -54,12 +78,6 @@ func InitCron() {
 		logger.Info().Time("NextRun", t).Msgf("Cronjob next run: %s", t.String())
 	}
 
-	jobs := s.Jobs()
-	for i := 0; i < len(jobs); i++ {
-		log.Info().Msgf("Job: %+v", jobs[i])
-	}
-
-	// Keep the scheduler running
+	// keep the scheduler running
 	select {}
-
 }
