@@ -7,8 +7,10 @@
   <body>
   <h1>{{ .CurrentIp }}</h1>
   <p>current time: {{ .CurrentTime }}</p>
+  {{ if .PreviousIp }}
   <p>previous ip: {{ .PreviousIp }}</p>
   <p>previous update: {{ .PreviousUpdateTime }}</p>
+  {{ end }}
   <hr />
   <form method="post" action="/force-update">
     <button type="submit">force update</button>
