@@ -13,7 +13,7 @@ func InitCron() {
 
 	logger := log.With().Str("module", "cronjob").Logger()
 
-	frequency := 30
+	frequency := 3
 	jitterEnv, ok := os.LookupEnv("CRON_FREQUENCY")
 	if ok {
 		s, err := strconv.Atoi(jitterEnv)
@@ -24,7 +24,7 @@ func InitCron() {
 		}
 	}
 
-	jitter := 15
+	jitter := 1
 	jitterEnv, ok = os.LookupEnv("CRON_FREQUENCY_JITTER")
 	if ok {
 		s, err := strconv.Atoi(jitterEnv)
@@ -46,6 +46,10 @@ func InitCron() {
 
 	task := func() {
 		logger.Info().Msg("Running task")
+
+		CheckAndUpdateIp()
+
+		logger.Info().Msg("Completed task")
 		t, err := job.NextRun()
 		if err == nil {
 			logger.Info().Time("NextRun", t).Msgf("Cronjob next run: %s", t.String())
@@ -68,7 +72,11 @@ func InitCron() {
 		logger.Fatal().Msg("Could not create cronjob")
 	}
 
-	logger.Info().Str("cronjob-id", job.ID().String()).Msgf("Cronjob created: %s", job.ID().String())
+	logger.Info().
+		Str("cronjob-id", job.ID().String()).
+		Int("frequency", frequency).
+		Int("jitter", jitter).
+		Msgf("Cronjob created: %s", job.ID().String())
 
 	s.Start()
 	logger.Info().Msg("Started cronjob scheduler")
