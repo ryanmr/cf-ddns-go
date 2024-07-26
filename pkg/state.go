@@ -20,8 +20,14 @@ var state ServerState
 //
 // This must be called before any calls to UpdateState.
 func InitState() {
-	currentIp := "0.0.0.0"
-	previousIp := "0.0.0.0"
+	ip, err := GetCurrentIpViaCloudflare()
+	if err != nil {
+		log.Warn().Msg("Could not get ip during InitState")
+		return
+	}
+
+	currentIp := ip + ""
+	previousIp := ""
 	time := time.Now()
 
 	log.Debug().Msg("Initializing state")
@@ -36,26 +42,47 @@ func InitState() {
 
 }
 
-// Updates the server state.
-func UpdateState(ip string) {
+type ReconcileResult struct {
+	updated bool
+}
+
+// Reconcile the server state.
+func ReconcileState(ip string) ReconcileResult {
 	time := time.Now()
 
-	log.Debug().
-		Str("ip", ip).
-		Time("time", time).
-		Int8("phase", 1).
+	log.Info().
 		Msg("Updating state")
 
 	state.Mutex.Lock()
-	*state.PreviousIp = *state.CurrentIp
-	*state.UpdateTime = time
-	*state.CurrentIp = ip
-	state.Mutex.Unlock()
 
 	log.Debug().
-		Str("ip", ip).
-		Time("time", time).
-		Int8("phase", 2).
+		Str("new-ip", ip).
+		Str("current-ip", *state.CurrentIp).
+		Str("previous-ip", *state.PreviousIp).
+		Str("update-ip", (*state.UpdateTime).String()).
+		Msg("Reviewing state conditions")
+
+	updated := false
+	if ip != *state.CurrentIp {
+		*state.PreviousIp = *state.CurrentIp
+		*state.UpdateTime = time
+		*state.CurrentIp = ip
+
+		updated = true
+
+		log.Debug().
+			Str("new-ip", ip).
+			Str("current-ip", *state.CurrentIp).
+			Str("previous-ip", *state.PreviousIp).
+			Str("update-ip", (*state.UpdateTime).String()).
+			Msg("Realizing state condition")
+	}
+
+	state.Mutex.Unlock()
+
+	log.Info().
 		Msg("Updated state")
 
+	result := ReconcileResult{updated}
+	return result
 }
