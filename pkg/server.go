@@ -2,7 +2,6 @@ package pkg
 
 import (
 	"encoding/json"
-	"fmt"
 	"html/template"
 	"net/http"
 	"os"
@@ -69,8 +68,7 @@ func Serve() {
 
 	r.Post("/force-update", func(w http.ResponseWriter, r *http.Request) {
 
-		// this is pretend
-		UpdateState(fmt.Sprintf("%d", requestID))
+		CheckAndUpdateIp()
 
 		http.Redirect(w, r, "/", http.StatusSeeOther)
 	})
