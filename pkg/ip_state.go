@@ -15,14 +15,14 @@ func CheckAndUpdateIp() error {
 
 	log.Info().Str("ip", ip).Msg("Retrieved ip")
 
-	result := ReconcileState(ip)
+	_ = ReconcileState(ip)
+	log.Info().Msg("Reconciled; ready to update cloudflare")
+	UpdateCloudflare(ip)
+	// if result.updated {
 
-	if result.updated {
-		log.Info().Msg("Reconciled; ready to update cloudflare")
-		UpdateCloudflare(ip)
-	} else {
-		log.Info().Msg("Reconciled; no changes necessary")
-	}
+	// } else {
+	// 	log.Info().Msg("Reconciled; no changes necessary")
+	// }
 
 	return nil
 }
