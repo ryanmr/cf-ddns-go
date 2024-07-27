@@ -12,11 +12,6 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func UpdateCloudflare(ip string) error {
-	log.Info().Msg("Updating cloudflare dns settings")
-	return nil
-}
-
 // CloudflareZoneRecord represents a DNS record in Cloudflare
 type CloudflareZoneRecord struct {
 	ID        string `json:"id"`
@@ -66,9 +61,9 @@ type CloudflarePatchDnsRecordRequest struct {
 const cloudflareApi = "https://api.cloudflare.com/client/v4"
 
 func getAccessToken() string {
-	value := os.Getenv("CLOUDFLARE_ACCESS_TOKEN")
-	if value == "" {
-		panic("cloudflare access token was not set")
+	value, ok := os.LookupEnv("CLOUDFLARE_ACCESS_TOKEN")
+	if !ok {
+		log.Fatal().Msg("CLOUDFLARE_ACCESS_TOKEN was not set")
 	}
 	return value
 }
@@ -80,7 +75,7 @@ func getListDnsRecordsEndpoint(zone string) string {
 func getListDnsRecords(zone string) (*CloudflareListDnsRecordsResponse, error) {
 	url := getListDnsRecordsEndpoint(zone)
 	token := getAccessToken()
-	fmt.Printf("🔑 token: %s...\n", token[:8])
+	log.Debug().Str("token", "token[:8]").Msg("Token is ready")
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -167,30 +162,77 @@ func patchDnsRecord(zoneId string, recordId string, body CloudflarePatchDnsRecor
 	return &data, nil
 }
 
-func example() {
-	// Example usage:
-	zone := "example_zone"
-	name := "example_name"
-	newIp := "123.123.123.123"
+func getZone() string {
+	value, ok := os.LookupEnv("CLOUDFLARE_ZONE_ID")
+	if !ok {
+		log.Fatal().Msg("CLOUDFLARE_ZONE_ID was not set")
+	}
+	return value
+}
+
+func getRecordName() string {
+	value, ok := os.LookupEnv("CLOUDFLARE_RECORD_NAME")
+	if !ok {
+		log.Fatal().Msg("CLOUDFLARE_RECORD_NAME was not set")
+	}
+	return value
+}
+
+func UpdateCloudflare(ip string) {
+	zone := getZone()
+	name := getRecordName()
+	UpdateCloudflareDnsRecord(zone, name, ip)
+}
+
+func UpdateCloudflareDnsRecord(zone string, name string, newIp string) bool {
+	log.Info().Str(zone, zone).
+		Str("name", name).Str("new-ip", newIp).Msg("Updating cloudflare dns record...")
 
 	dnsRecordsResp, err := getListDnsRecords(zone)
 	if err != nil {
-		fmt.Println("Error getting DNS records:", err)
-		return
+		log.Error().
+			Str(zone, zone).
+			Err(err).
+			Msgf("Could not get dns records in zone %s from Cloudflare", zone)
+		return false
 	}
 
 	record, err := selectZoneRecordByName(dnsRecordsResp.Result, name)
 	if err != nil {
-		fmt.Println("Error selecting DNS record by name:", err)
-		return
+		log.Error().
+			Str(zone, zone).
+			Str("name", name).
+			Err(err).
+			Msgf("Could not find name %s in zone %s from Cloudflare", name, zone)
+		return false
 	}
 
+	log.Debug().
+		Str("record-id", record.ID).
+		Str("existing-ip", record.Content).
+		Str("new-ip", newIp).
+		Msg("Zone record selected")
+
+	existingIp := record.Content
+	if newIp == existingIp {
+		log.Info().Msg("Existing ip is the same as new ip; skipping update")
+		return false
+	}
+
+	// todo: would be nice to add a Common field update with dt+user agent
 	patchBody := makePatchBody(*record, newIp)
-	updatedRecord, err := patchDnsRecord(zone, record.ID, patchBody)
+	_, err = patchDnsRecord(zone, record.ID, patchBody)
 	if err != nil {
-		fmt.Println("Error patching DNS record:", err)
-		return
+		log.Error().
+			Str(zone, zone).
+			Str("name", name).
+			Err(err).
+			Msgf("Could not update name %s in zone %s from Cloudflare", name, zone)
+		return false
 	}
 
-	fmt.Println("Updated DNS record:", updatedRecord)
+	log.Info().Str(zone, zone).
+		Str("name", name).Str("new-ip", newIp).Msg("Updated cloudflare dns record")
+
+	return true
 }
