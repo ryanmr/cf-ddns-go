@@ -11,7 +11,7 @@ func GetCurrentIpViaCloudflare() (string, error) {
 	cmd := exec.Command("dig", "@1.1.1.1", "ch", "txt", "whoami.Cloudflare", "+short")
 	output, err := cmd.Output()
 	if err != nil {
-		log.Warn().Msg("Could not fetch ip address")
+		log.Warn().Msg("Could not fetch ip address by running dig command")
 		return "", err
 	}
 
