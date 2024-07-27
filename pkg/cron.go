@@ -47,7 +47,7 @@ func InitCron() {
 	task := func() {
 		logger.Info().Msg("Running task")
 
-		CheckAndUpdateIp()
+		CheckAndUpdateIp(false)
 
 		logger.Info().Msg("Completed task")
 		t, err := job.NextRun()

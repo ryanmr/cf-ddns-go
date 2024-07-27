@@ -68,7 +68,7 @@ func Serve() {
 
 	r.Post("/force-update", func(w http.ResponseWriter, r *http.Request) {
 
-		CheckAndUpdateIp()
+		CheckAndUpdateIp(true)
 
 		http.Redirect(w, r, "/", http.StatusSeeOther)
 	})

@@ -4,7 +4,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func CheckAndUpdateIp() error {
+func CheckAndUpdateIp(override bool) error {
 	log.Info().Msg("Getting ip")
 	ip, err := GetCurrentIpViaCloudflare()
 
@@ -15,14 +15,17 @@ func CheckAndUpdateIp() error {
 
 	log.Info().Str("ip", ip).Msg("Retrieved ip")
 
-	_ = ReconcileState(ip)
-	log.Info().Msg("Reconciled; ready to update cloudflare")
-	UpdateCloudflare(ip)
-	// if result.updated {
+	result := ReconcileState(ip)
 
-	// } else {
-	// 	log.Info().Msg("Reconciled; no changes necessary")
-	// }
+	if override {
+		log.Info().Msg("Reconciliation override; updating cloudflare anyway")
+		UpdateCloudflare(ip)
+	} else if result.updated {
+		log.Info().Msg("Reconciled; ready to update cloudflare")
+		UpdateCloudflare(ip)
+	} else {
+		log.Info().Msg("Reconciled; no changes necessary")
+	}
 
 	return nil
 }
