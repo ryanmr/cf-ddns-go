@@ -1,0 +1,7 @@
+services:
+
+  app:
+    build: .
+    env_file: docker-compose.env
+    ports:
+      - "8700:3000"
