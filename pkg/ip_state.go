@@ -17,6 +17,10 @@ func CheckAndUpdateIp(override bool) error {
 
 	result := ReconcileState(ip)
 
+	if result.updated {
+		handleDiscordWebhook(ip)
+	}
+
 	if override {
 		log.Info().Msg("Reconciliation override; updating cloudflare anyway")
 		UpdateCloudflare(ip)
