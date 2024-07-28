@@ -17,7 +17,7 @@ FROM alpine
 
 WORKDIR /app
 
-RUN apk add --no-cache --update bind-tools
+RUN apk add --no-cache --update bind-tools curl
 
 COPY --from=builder /app/public /app/public
 COPY --from=builder /app/templates /app/templates
