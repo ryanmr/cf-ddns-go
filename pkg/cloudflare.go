@@ -178,6 +178,24 @@ func getRecordName() string {
 	return value
 }
 
+// GetCloudflareDnsIp fetches the current IP stored in the Cloudflare DNS record.
+func GetCloudflareDnsIp() (string, error) {
+	zone := getZone()
+	name := getRecordName()
+
+	dnsRecordsResp, err := getListDnsRecords(zone)
+	if err != nil {
+		return "", fmt.Errorf("could not list DNS records: %w", err)
+	}
+
+	record, err := selectZoneRecordByName(dnsRecordsResp.Result, name)
+	if err != nil {
+		return "", fmt.Errorf("could not find record %s: %w", name, err)
+	}
+
+	return record.Content, nil
+}
+
 func UpdateCloudflare(ip string) {
 	zone := getZone()
 	name := getRecordName()
