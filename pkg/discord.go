@@ -53,12 +53,14 @@ func handleDiscordWebhook(newIP string) {
 
 	jsonData, err := json.Marshal(payload)
 	if err != nil {
-		log.Fatal().Err(err).Msgf("Failed to marshal payload: %v", err)
+		log.Error().Err(err).Msg("Failed to marshal discord payload")
+		return
 	}
 
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
 	if err != nil {
-		log.Fatal().Err(err).Msgf("Failed to create request: %v", err)
+		log.Error().Err(err).Msg("Failed to create discord request")
+		return
 	}
 	req.Header.Set("Content-Type", "application/json")
 
@@ -67,7 +69,8 @@ func handleDiscordWebhook(newIP string) {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Fatal().Err(err).Msgf("Failed to send request: %v", err)
+		log.Error().Err(err).Msg("Failed to send discord webhook")
+		return
 	}
 	defer resp.Body.Close()
 
@@ -133,4 +136,24 @@ var quips []string = []string{
 	"Sometimes when there's an update, I just don't tell anyone anyway.",
 	"REDACTED. CLASSIFIED.",
 	"Going, going, gone!",
+	"Have you tried turning the entire internet off and on again?",
+	"Plot twist: the IP was inside us all along.",
+	"This is your ISP's way of keeping things exciting.",
+	"New IP just dropped. Limited edition.",
+	"I've seen more stable connections on a tin can telephone.",
+	"Somewhere, a DHCP lease just expired and chose violence.",
+	"Don't worry, I wrote it down on a sticky note this time.",
+	"The packets must flow.",
+	"Another day, another dollar, another IP address.",
+	"I blame cosmic rays.",
+	"This wouldn't happen if we all just used IPv6.",
+	"Your ISP called. They said 'lol.'",
+	"Breaking news: local server changes address, neighbors unaffected.",
+	"In this economy? Even IP addresses can't afford to stay put.",
+	"The DNS gods demand a sacrifice.",
+	"Fun fact: this is the 4,294,967,296th coolest IP address possible.",
+	"I'm not saying it was aliens, but it was definitely your modem.",
+	"Achievement unlocked: IP Address Rotation Survivor.",
+	"If anyone asks, we were always at this address.",
+	"Roses are red, violets are blue, your IP changed, and your DNS did too.",
 }
