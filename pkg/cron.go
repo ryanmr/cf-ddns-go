@@ -31,7 +31,7 @@ func InitCron() {
 		if err != nil {
 			logger.Warn().Msg("Could not evaluate CRON_FREQUENCY_JITTER, defaulting")
 		} else {
-			frequency = s
+			jitter = s
 		}
 	}
 
